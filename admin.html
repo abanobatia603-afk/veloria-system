@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veloria Admin</title>
+
+<style>
+body{font-family:Arial;background:#f7f3ff;padding:15px}
+.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:15px}
+input,select{width:100%;padding:8px;margin:6px 0}
+button{background:#6a0dad;color:#fff;border:none;padding:10px;border-radius:8px;width:100%}
+img{width:100%;border-radius:10px;margin-top:5px}
+.item{background:#eee;padding:10px;border-radius:8px;margin-top:10px}
+.badge{padding:4px 8px;border-radius:6px;font-size:12px;color:#fff}
+.free{background:#4caf50}
+.booked{background:#f44336}
+</style>
+</head>
+
+<body>
+
+<h2>⚙️ إدارة Veloria</h2>
+
+<div class="card">
+<h3>إضافة فستان</h3>
+<input id="name" placeholder="اسم الفستان">
+<input id="price" type="number" placeholder="السعر">
+<select id="type">
+<option>سهرة</option>
+<option>خطوبة</option>
+<option>فرح</option>
+</select>
+<input id="img" type="file" accept="image/*">
+<button onclick="addDress()">حفظ</button>
+</div>
+
+<div id="list"></div>
+
+<script>
+const API = "data.json";
+let dresses = [];
+
+fetch(API).then(r=>r.json()).then(d=>{dresses=d;render();});
+
+function addDress(){
+let file = img.files[0];
+if(!file) return alert("اختاري صورة");
+let reader = new FileReader();
+reader.onload = ()=>{
+dresses.push({
+name:name.value,
+price:price.value,
+type:type.value,
+img:reader.result,
+status:"متاح"
+});
+save();
+};
+reader.readAsDataURL(file);
+}
+
+function save(){
+fetch(API,{
+method:"PUT",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(dresses)
+}).then(()=>{name.value="";price.value="";render();});
+}
+
+function render(){
+list.innerHTML="";
+dresses.forEach((d,i)=>{
+list.innerHTML+=`
+<div class="item">
+<img src="${d.img}">
+<b>${d.name}</b><br>
+${d.type} – ${d.price} جنيه<br>
+<span class="badge ${d.status=="متاح"?"free":"booked"}">${d.status}</span>
+<button onclick="toggle(${i})">تغيير الحالة</button>
+</div>`;
+});
+}
+
+function toggle(i){
+dresses[i].status = dresses[i].status=="متاح"?"محجوز":"متاح";
+save();
+}
+</script>
+
+</body>
+</html>

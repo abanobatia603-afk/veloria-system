@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Veloria Atelier</title>
+
 <style>
 body{margin:0;font-family:Arial;background:#f6f3f8;text-align:center}
 header{background:#3b1c4a;color:#d4af37;padding:20px;font-size:26px}
@@ -30,66 +31,127 @@ footer{font-size:12px;color:#666;padding:15px}
 
 <div class="container" id="dresses"></div>
 
+<!-- لوحة الإدارة -->
 <div class="admin" id="admin">
   <h3>⚙️ إدارة Veloria</h3>
-  <input id="name" placeholder="اسم الفستان">
-  <input id="price" placeholder="السعر">
-  <input id="img" placeholder="لينك الصورة">
+  <input id="dressName" placeholder="اسم الفستان">
+  <input id="dressPrice" placeholder="السعر">
+  <input id="dressImg" placeholder="لينك صورة مباشر">
   <button class="gold" onclick="saveDress()">حفظ</button>
 </div>
 
 <footer>
-Veloria – Luxury Dresses<br>📞 01228199366
+Veloria – Luxury Dresses<br>
+📞 01228199366
 </footer>
 
 <script>
-const PASSWORD="veloria123";
-let isAdmin=false, editIndex=null;
-let dresses=[{name:"فستان سهرة",price:"5000",img:"https://via.placeholder.com/300"}];
+/* ===== الإعدادات ===== */
+const PASSWORD = "veloria123";
 
-const box=document.getElementById("dresses");
+/* ===== المتغيرات ===== */
+let isAdmin = false;
+let editIndex = null;
+
+/* ===== البيانات (مؤقتة – تتعدل يدويًا عندك) ===== */
+let dresses = [
+  {
+    name: "فستان سهرة",
+    price: "5000",
+    img: "https://via.placeholder.com/300"
+  }
+];
+
+const box = document.getElementById("dresses");
+
+/* ===== عرض الفساتين ===== */
 function render(){
-  box.innerHTML="";
+  box.innerHTML = "";
   dresses.forEach((d,i)=>{
-    box.innerHTML+=`
-    <div class="card">
-      <img src="${d.img}">
-      <h3>${d.name}</h3>
-      <div class="price">${d.price} جنيه</div>
-      <a href="https://wa.me/201228199366?text=عايزه احجز ${d.name}" target="_blank">
-        <button>احجزي واتساب</button>
-      </a>
-      ${isAdmin?`<br><button onclick="editDress(${i})">✏️ تعديل</button>
-      <button onclick="deleteDress(${i})">🗑 حذف</button>`:""}
-    </div>`;
+    box.innerHTML += `
+      <div class="card">
+        <img src="${d.img}" alt="${d.name}">
+        <h3>${d.name}</h3>
+        <div class="price">${d.price} جنيه</div>
+
+        <a href="https://wa.me/201228199366?text=عايزه احجز ${encodeURIComponent(d.name)}" target="_blank">
+          <button>احجزي واتساب</button>
+        </a>
+
+        ${isAdmin ? `
+          <br>
+          <button onclick="editDress(${i})">✏️ تعديل</button>
+          <button onclick="deleteDress(${i})">🗑 حذف</button>
+        ` : ``}
+      </div>
+    `;
   });
 }
 render();
 
-// ضغطة مطوّلة على العنوان
+/* ===== ضغطة مطوّلة على العنوان ===== */
 let pressTimer;
-const trigger=document.getElementById("adminTrigger");
-["touchstart","mousedown"].forEach(e=>trigger.addEventListener(e,()=>pressTimer=setTimeout(openAdmin,1200)));
-["touchend","mouseup","mouseleave"].forEach(e=>trigger.addEventListener(e,()=>clearTimeout(pressTimer)));
+const trigger = document.getElementById("adminTrigger");
 
+["touchstart","mousedown"].forEach(e=>{
+  trigger.addEventListener(e,()=>pressTimer=setTimeout(openAdmin,1200));
+});
+["touchend","mouseup","mouseleave"].forEach(e=>{
+  trigger.addEventListener(e,()=>clearTimeout(pressTimer));
+});
+
+/* ===== فتح الإدارة ===== */
 function openAdmin(){
-  const pass=prompt("كلمة السر:");
-  if(pass===PASSWORD){isAdmin=true;admin.style.display="block";render();}
-  else alert("غير مسموح");
+  const pass = prompt("كلمة السر:");
+  if(pass === PASSWORD){
+    isAdmin = true;
+    admin.style.display = "block";
+    render();
+  }else{
+    alert("غير مسموح");
+  }
 }
 
+/* ===== حفظ / تعديل ===== */
 function saveDress(){
-  const d={name:name.value,price:price.value,img:img.value};
-  if(editIndex!==null){dresses[editIndex]=d;editIndex=null;}
-  else dresses.push(d);
-  name.value=price.value=img.value="";
-  render(); alert("تم الحفظ ✔");
+  const name = dressName.value.trim();
+  const price = dressPrice.value.trim();
+  const img = dressImg.value.trim();
+
+  if(!name || !price || !img){
+    alert("كمّل كل البيانات");
+    return;
+  }
+
+  const data = { name, price, img };
+
+  if(editIndex !== null){
+    dresses[editIndex] = data;
+    editIndex = null;
+  }else{
+    dresses.push(data);
+  }
+
+  dressName.value = dressPrice.value = dressImg.value = "";
+  render();
+  alert("تم الحفظ ✔");
 }
+
+/* ===== تعديل ===== */
 function editDress(i){
-  const d=dresses[i]; name.value=d.name; price.value=d.price; img.value=d.img; editIndex=i;
+  const d = dresses[i];
+  dressName.value = d.name;
+  dressPrice.value = d.price;
+  dressImg.value = d.img;
+  editIndex = i;
 }
+
+/* ===== حذف ===== */
 function deleteDress(i){
-  if(confirm("متأكد من الحذف؟")){dresses.splice(i,1); render();}
+  if(confirm("متأكد من الحذف؟")){
+    dresses.splice(i,1);
+    render();
+  }
 }
 </script>
 

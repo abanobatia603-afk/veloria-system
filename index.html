@@ -26,7 +26,7 @@ footer{font-size:12px;color:#666;padding:15px}
 
 <div class="qr">
   <p>📱 امسحي الكود للحجز</p>
-  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://abanobatia603-afk.github.io/اسم-الريبو/" />
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://abanobatia603-afk.github.io/veloria-system/" />
 </div>
 
 <div class="container" id="dresses"></div>
@@ -36,7 +36,7 @@ footer{font-size:12px;color:#666;padding:15px}
   <h3>⚙️ إدارة Veloria</h3>
   <input id="dressName" placeholder="اسم الفستان">
   <input id="dressPrice" placeholder="السعر">
-  <input id="dressImg" placeholder="لينك صورة مباشر">
+  <input type="file" id="dressImg" accept="image/*">
   <button class="gold" onclick="saveDress()">حفظ</button>
 </div>
 
@@ -45,54 +45,59 @@ Veloria – Luxury Dresses<br>
 📞 01228199366
 </footer>
 
-<script>
-/* ===== الإعدادات ===== */
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDgPWCpM_Wp7Oz1ikCoR5nKe1VU47tTzV4",
+  authDomain: "veloria-d5697.firebaseapp.com",
+  projectId: "veloria-d5697",
+  storageBucket: "veloria-d5697.firebasestorage.app",
+  messagingSenderId: "445116618770",
+  appId: "1:445116618770:web:bd94f78cb7575e28cb20cb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
 const PASSWORD = "veloria123";
-
-/* ===== المتغيرات ===== */
 let isAdmin = false;
-let editIndex = null;
-
-/* ===== البيانات (مؤقتة – تتعدل يدويًا عندك) ===== */
-let dresses = [
-  {
-    name: "فستان سهرة",
-    price: "5000",
-    img: "https://via.placeholder.com/300"
-  }
-];
+let pressTimer;
+let editId = null;
 
 const box = document.getElementById("dresses");
 
-/* ===== عرض الفساتين ===== */
-function render(){
-  box.innerHTML = "";
-  dresses.forEach((d,i)=>{
-    box.innerHTML += `
+/* تحميل الفساتين */
+async function loadDresses(){
+  box.innerHTML="";
+  const snap = await getDocs(collection(db,"dresses"));
+  snap.forEach(docu=>{
+    const d = docu.data();
+    box.innerHTML+=`
       <div class="card">
-        <img src="${d.img}" alt="${d.name}">
+        <img src="${d.img}">
         <h3>${d.name}</h3>
         <div class="price">${d.price} جنيه</div>
-
         <a href="https://wa.me/201228199366?text=عايزه احجز ${encodeURIComponent(d.name)}" target="_blank">
           <button>احجزي واتساب</button>
         </a>
-
         ${isAdmin ? `
           <br>
-          <button onclick="editDress(${i})">✏️ تعديل</button>
-          <button onclick="deleteDress(${i})">🗑 حذف</button>
+          <button onclick="editDress('${docu.id}','${d.name}','${d.price}','${d.img}')">✏️ تعديل</button>
+          <button onclick="deleteDress('${docu.id}')">🗑 حذف</button>
         ` : ``}
       </div>
     `;
   });
 }
-render();
+loadDresses();
 
-/* ===== ضغطة مطوّلة على العنوان ===== */
-let pressTimer;
+/* ضغطة مطوّلة على العنوان */
 const trigger = document.getElementById("adminTrigger");
-
 ["touchstart","mousedown"].forEach(e=>{
   trigger.addEventListener(e,()=>pressTimer=setTimeout(openAdmin,1200));
 });
@@ -100,59 +105,56 @@ const trigger = document.getElementById("adminTrigger");
   trigger.addEventListener(e,()=>clearTimeout(pressTimer));
 });
 
-/* ===== فتح الإدارة ===== */
 function openAdmin(){
   const pass = prompt("كلمة السر:");
   if(pass === PASSWORD){
     isAdmin = true;
-    admin.style.display = "block";
-    render();
-  }else{
-    alert("غير مسموح");
-  }
+    admin.style.display="block";
+    loadDresses();
+  }else alert("غير مسموح");
 }
 
-/* ===== حفظ / تعديل ===== */
-function saveDress(){
-  const name = dressName.value.trim();
-  const price = dressPrice.value.trim();
-  const img = dressImg.value.trim();
+/* حفظ / تعديل */
+window.saveDress = async ()=>{
+  const name = dressName.value;
+  const price = dressPrice.value;
+  const file = dressImg.files[0];
 
-  if(!name || !price || !img){
+  if(!name || !price || !file){
     alert("كمّل كل البيانات");
     return;
   }
 
-  const data = { name, price, img };
+  const imgRef = ref(storage, "dresses/"+Date.now());
+  await uploadBytes(imgRef, file);
+  const imgURL = await getDownloadURL(imgRef);
 
-  if(editIndex !== null){
-    dresses[editIndex] = data;
-    editIndex = null;
+  if(editId){
+    await updateDoc(doc(db,"dresses",editId),{name,price,img:imgURL});
+    editId = null;
   }else{
-    dresses.push(data);
+    await addDoc(collection(db,"dresses"),{name,price,img:imgURL});
   }
 
-  dressName.value = dressPrice.value = dressImg.value = "";
-  render();
-  alert("تم الحفظ ✔");
-}
+  dressName.value=dressPrice.value="";
+  dressImg.value="";
+  loadDresses();
+};
 
-/* ===== تعديل ===== */
-function editDress(i){
-  const d = dresses[i];
-  dressName.value = d.name;
-  dressPrice.value = d.price;
-  dressImg.value = d.img;
-  editIndex = i;
-}
+/* تعديل */
+window.editDress = (id,name,price,img)=>{
+  dressName.value=name;
+  dressPrice.value=price;
+  editId=id;
+};
 
-/* ===== حذف ===== */
-function deleteDress(i){
+/* حذف */
+window.deleteDress = async (id)=>{
   if(confirm("متأكد من الحذف؟")){
-    dresses.splice(i,1);
-    render();
+    await deleteDoc(doc(db,"dresses",id));
+    loadDresses();
   }
-}
+};
 </script>
 
 </body>

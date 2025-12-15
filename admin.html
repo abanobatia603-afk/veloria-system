@@ -19,7 +19,7 @@ body{
   border-radius:12px;
   box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
-input, textarea{
+input{
   width:100%;
   padding:10px;
   margin:8px 0;
@@ -58,23 +58,23 @@ code{
   <input id="name" placeholder="اسم الفستان">
   <input id="price" placeholder="السعر">
   <input id="img" placeholder="لينك الصورة">
-  
-  <button onclick="generate()">توليد الكود</button>
+
+  <button onclick="generate()">توليد كود الفستان</button>
 
   <code id="result"></code>
 
   <p style="font-size:12px;color:#666">
-    انسخ الكود وحطه في index.html
+    انسخ الكود وحطه داخل صفحة index.html
   </p>
 </div>
 
 <script>
-const PASSWORD = "veloria123";
+const PASSWORD = "veloria123"; // غيرها لو حابب
 
 function login(){
   if(document.getElementById("pass").value === PASSWORD){
-    document.getElementById("loginBox").style.display="none";
-    document.getElementById("adminPanel").style.display="block";
+    loginBox.style.display="none";
+    adminPanel.style.display="block";
   }else{
     alert("كلمة السر غلط");
   }
@@ -90,12 +90,13 @@ function generate(){
   <img src="${i}">
   <h3>${n}</h3>
   <div class="price">${p}</div>
-  <a href="https://wa.me/201226742583?text=عايزه احجز ${n}" target="_blank">
+  <a href="https://wa.me/201228199366?text=عايزه احجز ${n}" target="_blank">
     <button>احجزي واتساب</button>
   </a>
-</div>`;
+</div>
+`;
 
-  document.getElementById("result").innerText = code;
+  result.innerText = code;
 }
 </script>
 

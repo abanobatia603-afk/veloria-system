@@ -3,203 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <title>Veloria Atelier</title>
-
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f6f3f8;
-  text-align:center;
-}
-header{
-  background:#3b1c4a;
-  color:#d4af37;
-  padding:20px;
-  font-size:26px;
-}
-.container{
-  padding:15px;
-}
-.card{
-  background:#fff;
-  margin:15px auto;
-  padding:15px;
-  border-radius:14px;
-  max-width:340px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.1);
-}
-.card img{
-  width:100%;
-  border-radius:12px;
-}
-.price{
-  color:#3b1c4a;
-  font-weight:bold;
-  margin:5px 0;
-}
-button{
-  background:#3b1c4a;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  padding:8px 14px;
-  margin:5px;
-}
-button.gold{
-  background:#d4af37;
-  color:#000;
-}
-.admin{
-  display:none;
-  background:#fff;
-  margin:20px;
-  padding:15px;
-  border-radius:12px;
-}
-input{
-  width:90%;
-  padding:8px;
-  margin:5px 0;
-}
-.qr{
-  margin:20px;
-}
-footer{
-  font-size:12px;
-  color:#666;
-  padding:15px;
-}
+body{margin:0;font-family:Arial;background:#f6f3f8;text-align:center}
+header{background:#3b1c4a;color:#d4af37;padding:20px;font-size:26px}
+.container{padding:15px}
+.card{background:#fff;margin:15px auto;padding:15px;border-radius:14px;max-width:340px;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+.card img{width:100%;border-radius:12px}
+.price{color:#3b1c4a;font-weight:bold;margin:5px 0}
+button{background:#3b1c4a;color:#fff;border:none;border-radius:8px;padding:8px 14px;margin:5px}
+button.gold{background:#d4af37;color:#000}
+.admin{display:none;background:#fff;margin:20px;padding:15px;border-radius:12px}
+input{width:90%;padding:8px;margin:5px 0}
+.qr{margin:20px}
+footer{font-size:12px;color:#666;padding:15px}
 </style>
 </head>
 
 <body>
 
-<header>VELORIA ATELIER</header>
+<header id="adminTrigger">VELORIA ATELIER</header>
 
 <div class="qr">
   <p>📱 امسحي الكود للحجز</p>
-  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://abanobatia603-afk.github.io/veloria-system/" />
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://abanobatia603-afk.github.io/اسم-الريبو/" />
 </div>
 
 <div class="container" id="dresses"></div>
 
-<!-- منطقة الضغط المطوّل -->
-<div id="secretZone" style="height:30px;"></div>
-
-<!-- لوحة الإدارة -->
 <div class="admin" id="admin">
   <h3>⚙️ إدارة Veloria</h3>
-
   <input id="name" placeholder="اسم الفستان">
   <input id="price" placeholder="السعر">
   <input id="img" placeholder="لينك الصورة">
-
   <button class="gold" onclick="saveDress()">حفظ</button>
 </div>
 
 <footer>
-Veloria – Luxury Dresses<br>
-📞 01228199366
+Veloria – Luxury Dresses<br>📞 01228199366
 </footer>
 
 <script>
-const PASSWORD = "veloria123";
-let isAdmin = false;
-let editIndex = null;
+const PASSWORD="veloria123";
+let isAdmin=false, editIndex=null;
+let dresses=[{name:"فستان سهرة",price:"5000",img:"https://via.placeholder.com/300"}];
 
-let dresses = [
-  {
-    name:"فستان سهرة",
-    price:"5000",
-    img:"https://via.placeholder.com/300"
-  }
-];
-
-const box = document.getElementById("dresses");
-
+const box=document.getElementById("dresses");
 function render(){
   box.innerHTML="";
   dresses.forEach((d,i)=>{
     box.innerHTML+=`
-      <div class="card">
-        <img src="${d.img}">
-        <h3>${d.name}</h3>
-        <div class="price">${d.price} جنيه</div>
-
-        <a href="https://wa.me/201228199366?text=عايزه احجز ${d.name}" target="_blank">
-          <button>احجزي واتساب</button>
-        </a>
-
-        ${
-          isAdmin ? `
-          <br>
-          <button onclick="editDress(${i})">✏️ تعديل</button>
-          <button onclick="deleteDress(${i})">🗑 حذف</button>
-          ` : ``
-        }
-      </div>
-    `;
+    <div class="card">
+      <img src="${d.img}">
+      <h3>${d.name}</h3>
+      <div class="price">${d.price} جنيه</div>
+      <a href="https://wa.me/201228199366?text=عايزه احجز ${d.name}" target="_blank">
+        <button>احجزي واتساب</button>
+      </a>
+      ${isAdmin?`<br><button onclick="editDress(${i})">✏️ تعديل</button>
+      <button onclick="deleteDress(${i})">🗑 حذف</button>`:""}
+    </div>`;
   });
 }
 render();
 
-/* ضغط مطوّل */
-let timer;
-const zone = document.getElementById("secretZone");
-
-zone.addEventListener("touchstart", ()=>{
-  timer = setTimeout(openAdmin, 1200);
-});
-zone.addEventListener("touchend", ()=>clearTimeout(timer));
-
-zone.addEventListener("mousedown", ()=>{
-  timer = setTimeout(openAdmin, 1200);
-});
-zone.addEventListener("mouseup", ()=>clearTimeout(timer));
+// ضغطة مطوّلة على العنوان
+let pressTimer;
+const trigger=document.getElementById("adminTrigger");
+["touchstart","mousedown"].forEach(e=>trigger.addEventListener(e,()=>pressTimer=setTimeout(openAdmin,1200)));
+["touchend","mouseup","mouseleave"].forEach(e=>trigger.addEventListener(e,()=>clearTimeout(pressTimer)));
 
 function openAdmin(){
-  const pass = prompt("كلمة السر:");
-  if(pass === PASSWORD){
-    isAdmin = true;
-    admin.style.display="block";
-    render();
-  }else{
-    alert("غير مسموح");
-  }
+  const pass=prompt("كلمة السر:");
+  if(pass===PASSWORD){isAdmin=true;admin.style.display="block";render();}
+  else alert("غير مسموح");
 }
 
 function saveDress(){
-  const d = {
-    name:name.value,
-    price:price.value,
-    img:img.value
-  };
-
-  if(editIndex !== null){
-    dresses[editIndex] = d;
-    editIndex = null;
-  }else{
-    dresses.push(d);
-  }
-
-  name.value = price.value = img.value = "";
-  render();
-  alert("تم الحفظ ✔");
+  const d={name:name.value,price:price.value,img:img.value};
+  if(editIndex!==null){dresses[editIndex]=d;editIndex=null;}
+  else dresses.push(d);
+  name.value=price.value=img.value="";
+  render(); alert("تم الحفظ ✔");
 }
-
 function editDress(i){
-  const d = dresses[i];
-  name.value = d.name;
-  price.value = d.price;
-  img.value = d.img;
-  editIndex = i;
+  const d=dresses[i]; name.value=d.name; price.value=d.price; img.value=d.img; editIndex=i;
 }
-
 function deleteDress(i){
-  if(confirm("متأكد من الحذف؟")){
-    dresses.splice(i,1);
-    render();
-  }
+  if(confirm("متأكد من الحذف؟")){dresses.splice(i,1); render();}
 }
 </script>
 

@@ -1,160 +1,205 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <title>Veloria Atelier</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{margin:0;font-family:Arial;background:#f6f3f8;text-align:center}
-header{background:#3b1c4a;color:#d4af37;padding:20px;font-size:26px}
+body{
+  font-family: Arial;
+  background:#f6f6f6;
+  margin:0;
+}
+header{
+  background:#4b2354;
+  color:#d4af37;
+  text-align:center;
+  padding:15px;
+  font-size:20px;
+  user-select:none;
+}
 .container{padding:15px}
-.card{background:#fff;margin:15px auto;padding:15px;border-radius:14px;max-width:340px;box-shadow:0 4px 10px rgba(0,0,0,.1)}
-.card img{width:100%;border-radius:12px}
-.price{color:#3b1c4a;font-weight:bold;margin:5px 0}
-button{background:#3b1c4a;color:#fff;border:none;border-radius:8px;padding:8px 14px;margin:5px}
-button.gold{background:#d4af37;color:#000}
-.admin{display:none;background:#fff;margin:20px;padding:15px;border-radius:12px}
-input{width:90%;padding:8px;margin:5px 0}
-.qr{margin:20px}
-footer{font-size:12px;color:#666;padding:15px}
+.card{
+  background:#fff;
+  border-radius:12px;
+  padding:15px;
+  margin-bottom:15px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+.card img{
+  width:100%;
+  border-radius:10px;
+}
+.btn{
+  border:none;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  margin:5px 0;
+  width:100%;
+}
+.whatsapp{background:#25D366;color:#fff}
+.edit{background:#6a1b9a;color:#fff}
+.delete{background:#b71c1c;color:#fff}
+.admin{display:none}
+input,select{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+}
+footer{text-align:center;color:#777;padding:20px}
+.small{color:#666;font-size:14px}
 </style>
 </head>
 
 <body>
 
-<header id="adminTrigger">VELORIA ATELIER</header>
+<header id="title">VELORIA ATELIER</header>
 
-<div class="qr">
+<div class="container">
+
+<!-- QR -->
+<div class="card">
   <p>📱 امسحي الكود للحجز</p>
-  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://abanobatia603-afk.github.io/veloria-system/" />
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://603-afk.github.io/veloria/">
 </div>
 
-<div class="container" id="dresses"></div>
+<!-- عرض الفساتين -->
+<div id="list"></div>
 
-<!-- لوحة الإدارة -->
+<!-- الإدارة -->
 <div class="admin" id="admin">
-  <h3>⚙️ إدارة Veloria</h3>
-  <input id="dressName" placeholder="اسم الفستان">
-  <input id="dressPrice" placeholder="السعر">
-  <input type="file" id="dressImg" accept="image/*">
-  <button class="gold" onclick="saveDress()">حفظ</button>
+  <div class="card">
+    <h3>⚙️ إدارة Veloria</h3>
+    <input id="name" placeholder="اسم الفستان">
+    <input id="price" placeholder="السعر">
+    <select id="cat">
+      <option value="">التصنيف</option>
+      <option value="سهرة">سهرة</option>
+      <option value="خطوبة">خطوبة</option>
+    </select>
+    <input type="file" id="img">
+    <button class="btn edit" onclick="addDress()">إضافة فستان</button>
+  </div>
+</div>
+
 </div>
 
 <footer>
-Veloria – Luxury Dresses<br>
+Veloria – Luxury Dresses  
 📞 01228199366
 </footer>
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDgPWCpM_Wp7Oz1ikCoR5nKe1VU47tTzV4",
-  authDomain: "veloria-d5697.firebaseapp.com",
-  projectId: "veloria-d5697",
-  storageBucket: "veloria-d5697.firebasestorage.app",
-  messagingSenderId: "445116618770",
-  appId: "1:445116618770:web:bd94f78cb7575e28cb20cb"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-const PASSWORD = "veloria123";
+<script>
+const PASSWORD = "1234"; // غيريها
+const PHONE = "201228199366"; // واتساب
 let isAdmin = false;
-let pressTimer;
-let editId = null;
 
-const box = document.getElementById("dresses");
+let data = JSON.parse(localStorage.getItem("veloria")) || [];
 
-/* تحميل الفساتين */
-async function loadDresses(){
+function save(){
+  localStorage.setItem("veloria",JSON.stringify(data));
+}
+
+function render(){
+  const box = document.getElementById("list");
   box.innerHTML="";
-  const snap = await getDocs(collection(db,"dresses"));
-  snap.forEach(docu=>{
-    const d = docu.data();
+  data.forEach((d,i)=>{
     box.innerHTML+=`
-      <div class="card">
-        <img src="${d.img}">
-        <h3>${d.name}</h3>
-        <div class="price">${d.price} جنيه</div>
-        <a href="https://wa.me/201228199366?text=عايزه احجز ${encodeURIComponent(d.name)}" target="_blank">
-          <button>احجزي واتساب</button>
-        </a>
-        ${isAdmin ? `
-          <br>
-          <button onclick="editDress('${docu.id}','${d.name}','${d.price}','${d.img}')">✏️ تعديل</button>
-          <button onclick="deleteDress('${docu.id}')">🗑 حذف</button>
-        ` : ``}
-      </div>
-    `;
+    <div class="card">
+      <img src="${d.img}">
+      <h3>${d.name}</h3>
+      <p class="small">التصنيف: ${d.cat}</p>
+      <p><b>${d.price}</b> جنيه</p>
+
+      <input placeholder="اسمك" id="cname${i}">
+      <input placeholder="رقمك" id="cphone${i}">
+
+      <button class="btn whatsapp" onclick="book(${i})">
+        احجزي واتساب
+      </button>
+
+      ${isAdmin ? `
+        <button class="btn edit" onclick="editDress(${i})">تعديل</button>
+        <button class="btn delete" onclick="delDress(${i})">حذف</button>
+      `:""}
+    </div>`;
   });
 }
-loadDresses();
 
-/* ضغطة مطوّلة على العنوان */
-const trigger = document.getElementById("adminTrigger");
-["touchstart","mousedown"].forEach(e=>{
-  trigger.addEventListener(e,()=>pressTimer=setTimeout(openAdmin,1200));
-});
-["touchend","mouseup","mouseleave"].forEach(e=>{
-  trigger.addEventListener(e,()=>clearTimeout(pressTimer));
-});
+function book(i){
+  const n=document.getElementById("cname"+i).value;
+  const p=document.getElementById("cphone"+i).value;
+  if(!n||!p)return alert("اكتبي اسمك ورقمك");
 
-function openAdmin(){
-  const pass = prompt("كلمة السر:");
-  if(pass === PASSWORD){
-    isAdmin = true;
-    admin.style.display="block";
-    loadDresses();
-  }else alert("غير مسموح");
+  const msg = `
+حجز فستان 👗
+الاسم: ${n}
+الموبايل: ${p}
+الفستان: ${data[i].name}
+التصنيف: ${data[i].cat}
+السعر: ${data[i].price} جنيه
+  `;
+  window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`);
 }
 
-/* حفظ / تعديل */
-window.saveDress = async ()=>{
-  const name = dressName.value;
-  const price = dressPrice.value;
-  const file = dressImg.files[0];
+function addDress(){
+  const name=nameInput.value;
+  const price=priceInput.value;
+  const cat=catInput.value;
+  const file=imgInput.files[0];
 
-  if(!name || !price || !file){
-    alert("كمّل كل البيانات");
-    return;
+  if(!name||!price||!cat||!file)
+    return alert("كملي البيانات");
+
+  const r=new FileReader();
+  r.onload=e=>{
+    data.push({name,price,cat,img:e.target.result});
+    save();render();
   }
+  r.readAsDataURL(file);
+}
 
-  const imgRef = ref(storage, "dresses/"+Date.now());
-  await uploadBytes(imgRef, file);
-  const imgURL = await getDownloadURL(imgRef);
+const nameInput=document.getElementById("name");
+const priceInput=document.getElementById("price");
+const catInput=document.getElementById("cat");
+const imgInput=document.getElementById("img");
 
-  if(editId){
-    await updateDoc(doc(db,"dresses",editId),{name,price,img:imgURL});
-    editId = null;
-  }else{
-    await addDoc(collection(db,"dresses"),{name,price,img:imgURL});
+function delDress(i){
+  if(confirm("حذف الفستان؟")){
+    data.splice(i,1);
+    save();render();
   }
+}
 
-  dressName.value=dressPrice.value="";
-  dressImg.value="";
-  loadDresses();
-};
-
-/* تعديل */
-window.editDress = (id,name,price,img)=>{
-  dressName.value=name;
-  dressPrice.value=price;
-  editId=id;
-};
-
-/* حذف */
-window.deleteDress = async (id)=>{
-  if(confirm("متأكد من الحذف؟")){
-    await deleteDoc(doc(db,"dresses",id));
-    loadDresses();
+function editDress(i){
+  const n=prompt("اسم الفستان",data[i].name);
+  const p=prompt("السعر",data[i].price);
+  const c=prompt("التصنيف (سهرة/خطوبة)",data[i].cat);
+  if(n&&p&&c){
+    data[i].name=n;
+    data[i].price=p;
+    data[i].cat=c;
+    save();render();
   }
-};
+}
+
+/* دخول الإدارة بضغطة مطولة */
+let timer;
+title.addEventListener("touchstart",()=>{
+  timer=setTimeout(()=>{
+    const pass=prompt("كلمة السر:");
+    if(pass===PASSWORD){
+      isAdmin=true;
+      admin.style.display="block";
+      render();
+    }
+  },1200);
+});
+title.addEventListener("touchend",()=>clearTimeout(timer));
+
+render();
 </script>
 
 </body>

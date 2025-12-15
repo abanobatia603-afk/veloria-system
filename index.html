@@ -42,8 +42,27 @@ button{
   color:#fff;
   border:none;
   border-radius:8px;
-  padding:10px 16px;
-  margin-top:10px;
+  padding:8px 14px;
+  margin:5px;
+}
+button.gold{
+  background:#d4af37;
+  color:#000;
+}
+.admin{
+  display:none;
+  background:#fff;
+  margin:20px;
+  padding:15px;
+  border-radius:12px;
+}
+input{
+  width:90%;
+  padding:8px;
+  margin:5px 0;
+}
+.qr{
+  margin:20px;
 }
 footer{
   font-size:12px;
@@ -57,16 +76,132 @@ footer{
 
 <header>VELORIA ATELIER</header>
 
-<div class="container">
+<div class="qr">
+  <p>📱 امسحي الكود للحجز</p>
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://abanobatia603-afk.github.io/veloria-system/" />
+</div>
 
-<!-- ✨ هنا بتحط كود الفساتين اللي جاي من صفحة الإدارة -->
+<div class="container" id="dresses"></div>
 
+<!-- منطقة الضغط المطوّل -->
+<div id="secretZone" style="height:30px;"></div>
+
+<!-- لوحة الإدارة -->
+<div class="admin" id="admin">
+  <h3>⚙️ إدارة Veloria</h3>
+
+  <input id="name" placeholder="اسم الفستان">
+  <input id="price" placeholder="السعر">
+  <input id="img" placeholder="لينك الصورة">
+
+  <button class="gold" onclick="saveDress()">حفظ</button>
 </div>
 
 <footer>
-Evening • Engagement • Wedding Dresses<br>
+Veloria – Luxury Dresses<br>
 📞 01228199366
 </footer>
+
+<script>
+const PASSWORD = "veloria123";
+let isAdmin = false;
+let editIndex = null;
+
+let dresses = [
+  {
+    name:"فستان سهرة",
+    price:"5000",
+    img:"https://via.placeholder.com/300"
+  }
+];
+
+const box = document.getElementById("dresses");
+
+function render(){
+  box.innerHTML="";
+  dresses.forEach((d,i)=>{
+    box.innerHTML+=`
+      <div class="card">
+        <img src="${d.img}">
+        <h3>${d.name}</h3>
+        <div class="price">${d.price} جنيه</div>
+
+        <a href="https://wa.me/201228199366?text=عايزه احجز ${d.name}" target="_blank">
+          <button>احجزي واتساب</button>
+        </a>
+
+        ${
+          isAdmin ? `
+          <br>
+          <button onclick="editDress(${i})">✏️ تعديل</button>
+          <button onclick="deleteDress(${i})">🗑 حذف</button>
+          ` : ``
+        }
+      </div>
+    `;
+  });
+}
+render();
+
+/* ضغط مطوّل */
+let timer;
+const zone = document.getElementById("secretZone");
+
+zone.addEventListener("touchstart", ()=>{
+  timer = setTimeout(openAdmin, 1200);
+});
+zone.addEventListener("touchend", ()=>clearTimeout(timer));
+
+zone.addEventListener("mousedown", ()=>{
+  timer = setTimeout(openAdmin, 1200);
+});
+zone.addEventListener("mouseup", ()=>clearTimeout(timer));
+
+function openAdmin(){
+  const pass = prompt("كلمة السر:");
+  if(pass === PASSWORD){
+    isAdmin = true;
+    admin.style.display="block";
+    render();
+  }else{
+    alert("غير مسموح");
+  }
+}
+
+function saveDress(){
+  const d = {
+    name:name.value,
+    price:price.value,
+    img:img.value
+  };
+
+  if(editIndex !== null){
+    dresses[editIndex] = d;
+    editIndex = null;
+  }else{
+    dresses.push(d);
+  }
+
+  name.value = price.value = img.value = "";
+  render();
+  alert("تم الحفظ ✔");
+}
+
+function editDress(i){
+  const d = dresses[i];
+  name.value = d.name;
+  price.value = d.price;
+  img.value = d.img;
+  editIndex = i;
+}
+
+function deleteDress(i){
+  if(confirm("متأكد من الحذف؟")){
+    dresses.splice(i,1);
+    render();
+  }
+}
+</script>
 
 </body>
 </html>
